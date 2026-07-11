@@ -330,6 +330,7 @@ enum
 	_VIV_MENU_NAVIGATE,
 	_VIV_MENU_NAVIGATE_SORT,
 	_VIV_MENU_NAVIGATE_PLAYLIST,
+	_VIV_MENU_MARK,
 	_VIV_MENU_HELP,
 	_VIV_MENU_COUNT,
 };
@@ -542,6 +543,7 @@ static LRESULT CALLBACK _viv_rebar_proc(HWND hwnd,UINT msg,WPARAM wParam,LPARAM 
 static LRESULT CALLBACK _viv_status_proc(HWND hwnd,UINT msg,WPARAM wParam,LPARAM lParam);
 static int _viv_toolbar_get_wide(void);
 static void _viv_toolbar_update_buttons(void);
+static void _viv_menu_update(void);
 static void _viv_status_set_temp_text(wchar_t *text);
 static void _viv_status_update_temp_pos_zoom(void);
 static void _viv_status_update_temp_animation_rate(void);
@@ -653,6 +655,7 @@ static void _viv_open_preload(void);
 static int _viv_safe_copy_data(const void *base,SIZE_T src_size,const void *src,void *dst,SIZE_T dst_size);
 
 static HMODULE _viv_stobject_hmodule = 0;
+static wchar_t _viv_exe_path[STRING_SIZE] = {0};
 static _viv_playlist_t *_viv_playlist_start = 0;
 static _viv_playlist_t *_viv_playlist_last = 0;
 static int _viv_playlist_count = 0;
@@ -834,6 +837,17 @@ static _viv_command_t _viv_commands[] =
 	{LOCALIZATION_ID_INVALID,MF_SEPARATOR,_VIV_MENU_EDIT,0},
 	{LOCALIZATION_ID_COPY_TO,MF_STRING,_VIV_MENU_EDIT,VIV_ID_EDIT_COPY_TO},
 	{LOCALIZATION_ID_MOVE_TO,MF_STRING,_VIV_MENU_EDIT,VIV_ID_EDIT_MOVE_TO},
+	{LOCALIZATION_ID_MARK_MENU,MF_POPUP,_VIV_MENU_ROOT,_VIV_MENU_MARK},
+	{LOCALIZATION_ID_MARK_VIEWED,MF_STRING,_VIV_MENU_MARK,VIV_ID_MARK_VIEWED},
+	{LOCALIZATION_ID_MARK_UNVIEWED,MF_STRING,_VIV_MENU_MARK,VIV_ID_MARK_UNVIEWED},
+	{LOCALIZATION_ID_INVALID,MF_SEPARATOR,_VIV_MENU_MARK,0},
+	{LOCALIZATION_ID_RATING_MENU,MF_POPUP,_VIV_MENU_MARK,_VIV_MENU_MARK_RATING},
+	{LOCALIZATION_ID_RATING_CLEAR,MF_STRING,_VIV_MENU_MARK_RATING,VIV_ID_RATING_CLEAR},
+	{LOCALIZATION_ID_RATING_1,MF_STRING|MFT_RADIOCHECK,_VIV_MENU_MARK_RATING,VIV_ID_RATING_1},
+	{LOCALIZATION_ID_RATING_2,MF_STRING|MFT_RADIOCHECK,_VIV_MENU_MARK_RATING,VIV_ID_RATING_2},
+	{LOCALIZATION_ID_RATING_3,MF_STRING|MFT_RADIOCHECK,_VIV_MENU_MARK_RATING,VIV_ID_RATING_3},
+	{LOCALIZATION_ID_RATING_4,MF_STRING|MFT_RADIOCHECK,_VIV_MENU_MARK_RATING,VIV_ID_RATING_4},
+	{LOCALIZATION_ID_RATING_5,MF_STRING|MFT_RADIOCHECK,_VIV_MENU_MARK_RATING,VIV_ID_RATING_5},
 
 	{LOCALIZATION_ID_VIEW,MF_POPUP,_VIV_MENU_ROOT,_VIV_MENU_VIEW},
 	
@@ -955,6 +969,9 @@ static _viv_command_t _viv_commands[] =
 	{LOCALIZATION_ID_INVALID,MF_SEPARATOR,_VIV_MENU_NAVIGATE,0},
 	{LOCALIZATION_ID_JUMP_TO,MF_STRING,_VIV_MENU_NAVIGATE,VIV_ID_NAV_JUMPTO},
 
+	{LOCALIZATION_ID_INVALID,MF_SEPARATOR,_VIV_MENU_NAVIGATE,0},
+	{LOCALIZATION_ID_NAV_NEXT_UNVIEWED,MF_STRING,_VIV_MENU_NAVIGATE,VIV_ID_NAV_NEXT_UNVIEWED},
+	{LOCALIZATION_ID_NAV_PREV_UNVIEWED,MF_STRING,_VIV_MENU_NAVIGATE,VIV_ID_NAV_PREV_UNVIEWED},
 	{LOCALIZATION_ID_HELP,MF_POPUP,_VIV_MENU_ROOT,_VIV_MENU_HELP},
 	{LOCALIZATION_ID_HELP_MENU,MF_STRING,_VIV_MENU_HELP,VIV_ID_HELP_HELP},
 	{LOCALIZATION_ID_COMMAND_LINE_OPTIONS,MF_STRING,_VIV_MENU_HELP,VIV_ID_HELP_COMMAND_LINE_OPTIONS},
@@ -1046,6 +1063,13 @@ _viv_default_key_t _viv_default_keys[] =
 	{VIV_ID_NAV_JUMPTO,'J'},
 	{VIV_ID_HELP_HELP,VK_F1},
 	{VIV_ID_HELP_ABOUT,CONFIG_KEYFLAG_CTRL | VK_F1},
+{VIV_ID_RATING_1, '1'},
+	{VIV_ID_RATING_2, '2'},
+	{VIV_ID_RATING_3, '3'},
+	{VIV_ID_RATING_4, '4'},
+	{VIV_ID_RATING_5, '5'},
+	{VIV_ID_RATING_CLEAR, '0'},
+	{VIV_ID_MARK_VIEWED, 'V'},
 };
 
 #define _VIV_DEFAULT_KEY_COUNT (sizeof(_viv_default_keys) / sizeof(_viv_default_key_t))
@@ -1490,6 +1514,8 @@ debug_printf("CURRENTLY LOADING %S preload %d\n",_viv_load_image_filename,_viv_l
 
 		_viv_activate_last();
 
+		_viv_menu_update();
+
 		_viv_preload_next();
 
 		return;
@@ -1498,6 +1524,8 @@ debug_printf("CURRENTLY LOADING %S preload %d\n",_viv_load_image_filename,_viv_l
 	if ((!is_preload) && (_viv_load_is_preload) && (*_viv_preload_fd->cFileName) && (string_compare(_viv_preload_fd->cFileName,fd->cFileName) == 0))
 	{
 		_viv_open_preload();
+
+		_viv_menu_update();
 
 		return;
 	}
@@ -1699,6 +1727,88 @@ static void _viv_command_with_is_key_repeat(int command_id,int is_key_repeat)
 		case VIV_ID_HELP_WEBSITE:
 			ShellExecuteA(_viv_hwnd,NULL,localization_get_string(LOCALIZATION_ID_HELP_WEBSITE_URL),NULL,NULL,SW_SHOWNORMAL);
 			break;
+
+		case VIV_ID_MARK_VIEWED:
+		{
+			wchar_t path[STRING_SIZE];
+
+			string_copy(path, _viv_frame_fd->cFileName);
+			viv_data_toggle_viewed(path);
+			viv_data_save(_viv_exe_path);
+			_viv_status_update();
+			_viv_menu_update();
+
+			break;
+		}
+
+		case VIV_ID_MARK_UNVIEWED:
+		{
+			wchar_t path[STRING_SIZE];
+
+			string_copy(path, _viv_frame_fd->cFileName);
+			viv_data_set_viewed(path, 0);
+			viv_data_save(_viv_exe_path);
+			_viv_status_update();
+			_viv_menu_update();
+
+			break;
+		}
+
+		case VIV_ID_RATING_CLEAR:
+		{
+			wchar_t path[STRING_SIZE];
+
+			string_copy(path, _viv_frame_fd->cFileName);
+			viv_data_set_rating(path, 0);
+			viv_data_save(_viv_exe_path);
+			_viv_status_update();
+			_viv_menu_update();
+
+			break;
+		}
+
+		case VIV_ID_RATING_1:
+		case VIV_ID_RATING_2:
+		case VIV_ID_RATING_3:
+		case VIV_ID_RATING_4:
+		case VIV_ID_RATING_5:
+		{
+			wchar_t path[STRING_SIZE];
+			int rating;
+
+			string_copy(path, _viv_frame_fd->cFileName);
+			rating = command_id - VIV_ID_RATING_CLEAR;
+			viv_data_set_rating(path, rating);
+			viv_data_save(_viv_exe_path);
+			_viv_status_update();
+			_viv_menu_update();
+
+			break;
+		}
+
+		case VIV_ID_NAV_NEXT_UNVIEWED:
+		{
+			WIN32_FIND_DATA best_fd;
+
+			if (viv_data_get_next_unviewed(&best_fd))
+			{
+				_viv_open(&best_fd, 0);
+			}
+
+			break;
+		}
+
+		case VIV_ID_NAV_PREV_UNVIEWED:
+		{
+			WIN32_FIND_DATA best_fd;
+
+			if (viv_data_get_prev_unviewed(&best_fd))
+			{
+				_viv_open(&best_fd, 0);
+			}
+
+			break;
+		}
 			
 		case VIV_ID_FILE_EXIT:
 			_viv_exit();
@@ -2804,7 +2914,6 @@ static LRESULT CALLBACK _viv_proc(HWND hwnd,UINT msg,WPARAM wParam,LPARAM lParam
 											_viv_clear();
 											_viv_start_first_frame();
 											_viv_process_pending_clear();
-
 											// we update status below.
 										}
 
@@ -2968,9 +3077,16 @@ debug_printf("NEXT AFTER LOAD %S\n",fd->cFileName);
 									_viv_start_first_frame();
 									
 									_viv_process_pending_clear();
-								}
-							}
-						}
+
+									// auto-mark as viewed when image is displayed
+									{
+										wchar_t path[STRING_SIZE];
+
+										string_copy(path, _viv_frame_fd->cFileName);
+										viv_data_set_viewed(path, 1);
+									}
+
+									_viv_menu_update();
 						
 						break;
 
@@ -5260,6 +5376,10 @@ static int _viv_init(int nCmdShow)
 
 	// load settings
 	config_load_settings();
+
+	// load image tracking data
+	string_get_exe_path(_viv_exe_path);
+	viv_data_load(_viv_exe_path);
 	
 	// config_maximized will be overwritten when we show are normal window
 	// so save it now and apply it later.
@@ -5568,6 +5688,9 @@ static void _viv_kill(void)
 	_viv_key_clear_all(_viv_key_list);
 	mem_free(_viv_key_list);
 	
+	// save image tracking data
+	viv_data_save(_viv_exe_path);
+	viv_data_free();
 	os_kill();
 
 #ifdef _DEBUG
@@ -11175,6 +11298,48 @@ static void _viv_status_update(void)
 				string_cat(dimension_buf,highbuf);
 				string_cat_utf8(dimension_buf," KB)");
 			}
+
+									// add viewed/rating info to status bar
+									if (*_viv_frame_fd->cFileName)
+									{
+										_viv_image_data_t *data;
+										wchar_t viewed_rating_buf[STRING_SIZE];
+										wchar_t tmp_buf[STRING_SIZE];
+										int needs_pipe = 0;
+									
+										data = viv_data_find((const utf8_t *)_viv_frame_fd->cFileName);
+										*viewed_rating_buf = 0;
+									
+										if (data && data->viewed)
+										{
+											string_copy_utf8_string(viewed_rating_buf, localization_get_string(LOCALIZATION_ID_STATUS_BAR_VIEWED));
+											if (data->rating > 0)
+											{
+												string_cat_utf8(viewed_rating_buf, " ");
+												for (int star = 0; star < data->rating; star++)
+												{
+													string_cat_utf8(viewed_rating_buf, "★");
+												}
+												for (int star = data->rating; star < 5; star++)
+												{
+													string_cat_utf8(viewed_rating_buf, "☆");
+												}
+											}
+										}
+										else if (data && !data->viewed)
+										{
+											string_copy_utf8_string(viewed_rating_buf, localization_get_string(LOCALIZATION_ID_STATUS_BAR_UNVIEWED));
+										}
+									
+										if (*viewed_rating_buf)
+										{
+											// Prepend to dimension_buf
+											string_copy(tmp_buf, dimension_buf);
+											string_copy(dimension_buf, viewed_rating_buf);
+											string_cat_utf8(dimension_buf, " | ");
+											string_cat(dimension_buf, tmp_buf);
+										}
+									}
 		}
 		
 		if (_viv_frame_count > 1)

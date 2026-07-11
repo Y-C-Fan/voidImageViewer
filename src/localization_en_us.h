@@ -284,6 +284,26 @@ static const utf8_t *_localization_string_array_en_us[LOCALIZATION_ID_COUNT] =
 	"Copy To", // LOCALIZATION_ID_COPY_TO_CAPTION,
 	"Move To", // LOCALIZATION_ID_MOVE_TO_CAPTION,
 
+	// Mark menu
+	"&Mark", // LOCALIZATION_ID_MARK_MENU,
+	"Mark as Viewed(&V)", // LOCALIZATION_ID_MARK_VIEWED,
+	"Mark as Unviewed(&U)", // LOCALIZATION_ID_MARK_UNVIEWED,
+	"Ratin&g", // LOCALIZATION_ID_RATING_MENU,
+	"Clear Rating", // LOCALIZATION_ID_RATING_CLEAR,
+	"★☆☆☆☆", // LOCALIZATION_ID_RATING_1,
+	"★★☆☆☆", // LOCALIZATION_ID_RATING_2,
+	"★★★☆☆", // LOCALIZATION_ID_RATING_3,
+	"★★★★☆", // LOCALIZATION_ID_RATING_4,
+	"★★★★★", // LOCALIZATION_ID_RATING_5,
+	"Next Unviewed(&N)", // LOCALIZATION_ID_NAV_NEXT_UNVIEWED,
+	"Previous Unviewed(&P)", // LOCALIZATION_ID_NAV_PREV_UNVIEWED,
+
+	// Status bar
+	"Viewed", // LOCALIZATION_ID_STATUS_BAR_VIEWED,
+	"Unviewed", // LOCALIZATION_ID_STATUS_BAR_UNVIEWED,
+	"%s %s", // LOCALIZATION_ID_STATUS_BAR_VIEWED_RATING_FORMAT,
+	"Viewed %d, Unviewed %d", // LOCALIZATION_ID_STATUS_BAR_VIEWED_COUNT_FORMAT,
+
 	// Association descriptions
 	"Bitmap Image",
 	"Animated GIF Image",

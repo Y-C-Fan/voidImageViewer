@@ -1625,6 +1625,7 @@
     <ClCompile Include="..\src\viv.c" />
     <ClCompile Include="..\src\wchar.c" />
     <ClCompile Include="..\src\webp.c" />
+    <ClCompile Include="..\src\viv_data.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\libwebp\src\dec\alphai_dec.h" />
@@ -1680,6 +1681,7 @@
     <ClInclude Include="..\src\utf8.h" />
     <ClInclude Include="..\src\version.h" />
     <ClInclude Include="..\src\viv.h" />
+    <ClInclude Include="..\src\viv_data.h" />
     <ClInclude Include="..\src\wchar.h" />
     <ClInclude Include="..\src\webp.h" />
   </ItemGroup>

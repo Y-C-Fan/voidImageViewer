@@ -221,6 +221,17 @@ enum
 	VIV_ID_VIEW_REFRESH,
 	VIV_ID_VIEW_CAPTION,
 	VIV_ID_VIEW_THICKFRAME,
+
+	VIV_ID_MARK_VIEWED,
+	VIV_ID_MARK_UNVIEWED,
+	VIV_ID_RATING_CLEAR,
+	VIV_ID_RATING_1,
+	VIV_ID_RATING_2,
+	VIV_ID_RATING_3,
+	VIV_ID_RATING_4,
+	VIV_ID_RATING_5,
+	VIV_ID_NAV_NEXT_UNVIEWED,
+	VIV_ID_NAV_PREV_UNVIEWED,
 };
 
 #include "version.h"
@@ -236,6 +247,7 @@ enum
 #include "webp.h"
 #include "small_pool.h"
 #include "safe_size.h"
+#include "viv_data.h"
 #include "everything_ipc.h"
 
 int viv_get_command_count(void);
@@ -243,6 +255,8 @@ int viv_menu_name_to_ini_name(utf8_t *buf,int command_index);
 void viv_key_add(int command_index,DWORD keyflags);
 void viv_key_clear_all(int command_index);
 config_key_t *viv_key_get_start(int command_index);
+
+extern BYTE config_tracking_enabled;
 
 #ifdef __cplusplus
 }

@@ -285,6 +285,26 @@ static const utf8_t *_localization_string_array_zh_cn[LOCALIZATION_ID_COUNT] =
 	"复制到", // LOCALIZATION_ID_COPY_TO_CAPTION,
 	"移动到", // LOCALIZATION_ID_MOVE_TO_CAPTION,
 
+	// Mark menu
+	"标记(&M)", // LOCALIZATION_ID_MARK_MENU,
+	"标记为已看(&V)", // LOCALIZATION_ID_MARK_VIEWED,
+	"标记为未看(&U)", // LOCALIZATION_ID_MARK_UNVIEWED,
+	"评分(&R)", // LOCALIZATION_ID_RATING_MENU,
+	"清除评分", // LOCALIZATION_ID_RATING_CLEAR,
+	"★☆☆☆☆", // LOCALIZATION_ID_RATING_1,
+	"★★☆☆☆", // LOCALIZATION_ID_RATING_2,
+	"★★★☆☆", // LOCALIZATION_ID_RATING_3,
+	"★★★★☆", // LOCALIZATION_ID_RATING_4,
+	"★★★★★", // LOCALIZATION_ID_RATING_5,
+	"下一张未看(&N)", // LOCALIZATION_ID_NAV_NEXT_UNVIEWED,
+	"上一张未看(&P)", // LOCALIZATION_ID_NAV_PREV_UNVIEWED,
+
+	// Status bar
+	"已看", // LOCALIZATION_ID_STATUS_BAR_VIEWED,
+	"未看", // LOCALIZATION_ID_STATUS_BAR_UNVIEWED,
+	"%s %s", // LOCALIZATION_ID_STATUS_BAR_VIEWED_RATING_FORMAT,  // "已看 ★★★"
+	"已看 %d 张，未看 %d 张", // LOCALIZATION_ID_STATUS_BAR_VIEWED_COUNT_FORMAT,
+
 	// Association descriptions
 	"Bitmap Image",
 	"Animated GIF Image",
